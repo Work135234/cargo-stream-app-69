@@ -3,12 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
-import { 
-  Package, 
-  Truck, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Package,
+  Truck,
+  Users,
+  DollarSign,
+  TrendingUp,
   TrendingDown,
   Clock,
   CheckCircle,
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
       mode: "truck"
     },
     {
-      id: "BK1246", 
+      id: "BK1246",
       customer: "Sarah Wilson",
       from: "Chicago, IL",
       to: "Detroit, MI",
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
       id: "BK1245",
       customer: "Tech Corp",
       from: "Los Angeles, CA",
-      to: "San Francisco, CA", 
+      to: "San Francisco, CA",
       status: "Delivered",
       amount: 200.00,
       driver: "Train Schedule A",
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
               <Progress value={transportStats.truck.percentage} className="h-2" />
               <p className="text-xs text-muted-foreground">{transportStats.truck.count} deliveries</p>
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -200,7 +200,7 @@ export default function AdminDashboard() {
               </div>
               <Progress value={stats.completionRate} className="h-2" />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Avg. Delivery Time</span>
@@ -267,8 +267,8 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center space-x-4">
                   <div className="bg-primary/10 p-2 rounded-full">
-                    {booking.mode === "truck" ? 
-                      <Truck className="h-4 w-4 text-primary" /> : 
+                    {booking.mode === "truck" ?
+                      <Truck className="h-4 w-4 text-primary" /> :
                       <Train className="h-4 w-4 text-primary" />
                     }
                   </div>

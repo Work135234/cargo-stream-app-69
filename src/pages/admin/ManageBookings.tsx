@@ -29,7 +29,7 @@ export default function ManageBookings() {
       date: "2024-01-15"
     },
     {
-      id: "BK1246", 
+      id: "BK1246",
       customer: "Sarah Wilson",
       from: "Chicago, IL",
       to: "Detroit, MI",
@@ -43,7 +43,7 @@ export default function ManageBookings() {
       id: "BK1245",
       customer: "Tech Corp",
       from: "Los Angeles, CA",
-      to: "San Francisco, CA", 
+      to: "San Francisco, CA",
       status: "Delivered",
       amount: 200.00,
       driver: "Train Schedule A",
@@ -55,7 +55,7 @@ export default function ManageBookings() {
   const drivers = [
     "Mike Johnson",
     "Sarah Davis",
-    "Robert Brown", 
+    "Robert Brown",
     "Lisa Garcia",
     "Train Schedule A",
     "Train Schedule B"
@@ -91,7 +91,7 @@ export default function ManageBookings() {
 
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.customer.toLowerCase().includes(searchTerm.toLowerCase());
+      booking.customer.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || booking.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -153,8 +153,8 @@ export default function ManageBookings() {
               >
                 <div className="flex items-center space-x-4">
                   <div className="bg-primary/10 p-2 rounded-full">
-                    {booking.mode === "truck" ? 
-                      <Truck className="h-4 w-4 text-primary" /> : 
+                    {booking.mode === "truck" ?
+                      <Truck className="h-4 w-4 text-primary" /> :
                       <Train className="h-4 w-4 text-primary" />
                     }
                   </div>
@@ -169,7 +169,7 @@ export default function ManageBookings() {
                     <p className="text-xs text-muted-foreground">{booking.from} → {booking.to}</p>
                   </div>
                 </div>
-                
+
                 <div className="text-right space-y-2">
                   <p className="font-medium">${booking.amount.toFixed(2)}</p>
                   <p className="text-sm text-muted-foreground">
@@ -178,8 +178,8 @@ export default function ManageBookings() {
                   <div className="flex gap-1">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => setSelectedBooking(booking.id)}
                         >
@@ -211,7 +211,7 @@ export default function ManageBookings() {
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button 
+                          <Button
                             onClick={() => handleAssignDriver(booking.id)}
                             disabled={!assignedDriver}
                           >
@@ -220,13 +220,13 @@ export default function ManageBookings() {
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
-                    
+
                     <Button size="sm" variant="outline">
                       <Edit className="h-3 w-3" />
                     </Button>
-                    
-                    <Button 
-                      size="sm" 
+
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => handleDeleteBooking(booking.id)}
                     >

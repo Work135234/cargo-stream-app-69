@@ -106,7 +106,7 @@ export default function ManageUsers() {
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -250,17 +250,17 @@ export default function ManageUsers() {
                     </div>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground">
-                      Joined: {new Date(user.joinDate).toLocaleDateString()} • 
+                      Joined: {new Date(user.joinDate).toLocaleDateString()} •
                       Bookings: {user.totalBookings}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-1">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => setSelectedUser(user.id)}
                       >
@@ -290,7 +290,7 @@ export default function ManageUsers() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button 
+                        <Button
                           onClick={() => handleRoleChange(user.id)}
                           disabled={!newUserRole}
                         >
@@ -299,17 +299,17 @@ export default function ManageUsers() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => handleToggleStatus(user.id, user.status)}
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => handleDeleteUser(user.id, user.name)}
                   >

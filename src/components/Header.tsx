@@ -1,26 +1,37 @@
-import { useState } from "react";
+
+// Header.tsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Truck, User, Settings, LogOut, Bell } from "lucide-react";
+import { Truck, User, LogOut } from "lucide-react";
+import NotificationBell from "./NotificationBell";
+import { useAuth } from "@/contexts/AuthContext";  // <-- real context
 
 export const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<'customer' | 'admin' | 'dispatcher' | null>('customer'); // Mock state
+  const { user, logout } = useAuth();
+
+  // derive role once
+  const role = user?.role?.toLowerCase();
 
   const handleLogout = () => {
-    setUserRole(null);
-    navigate('/login');
+    logout();        // clears token + context
+    navigate("/login");
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-destructive';
-      case 'dispatcher': return 'bg-accent';
-      default: return 'bg-primary';
+  const getRoleColor = (r?: string) => {
+    switch (r) {
+      case "admin": return "bg-destructive";
+      case "dispatcher": return "bg-accent";
+      default: return "bg-primary";
     }
   };
 
@@ -41,94 +52,56 @@ export const Header = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            {userRole && (
+            {role && (
               <>
-                {userRole === 'customer' && (
+                {role === "customer" && (
                   <>
-                    <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
-                      Dashboard
-                    </Link>
-                    <Link to="/booking" className="text-sm font-medium hover:text-primary transition-colors">
-                      New Booking
-                    </Link>
-                    <Link to="/tracking" className="text-sm font-medium hover:text-primary transition-colors">
-                      Track Orders
-                    </Link>
+                    <Link to="/dashboard">Dashboard</Link>
+                    <Link to="/booking">New Booking</Link>
+                    <Link to="/tracking">Track Orders</Link>
                   </>
                 )}
-                {userRole === 'admin' && (
+                {role === "admin" && (
                   <>
-                    <Link to="/admin" className="text-sm font-medium hover:text-primary transition-colors">
-                      Dashboard
-                    </Link>
-                    <Link to="/admin/bookings" className="text-sm font-medium hover:text-primary transition-colors">
-                      Bookings
-                    </Link>
-                    <Link to="/admin/users" className="text-sm font-medium hover:text-primary transition-colors">
-                      Users
-                    </Link>
-                    <Link to="/admin/reports" className="text-sm font-medium hover:text-primary transition-colors">
-                      Reports
-                    </Link>
+                    <Link to="/dashboard">Dashboard</Link>
+                    <Link to="/admin/bookings">Bookings</Link>
+                    <Link to="/admin/users">Users</Link>
+                    <Link to="/admin/reports">Reports</Link>
                   </>
                 )}
-                {userRole === 'dispatcher' && (
+                {role === "dispatcher" && (
                   <>
-                    <Link to="/dispatcher" className="text-sm font-medium hover:text-primary transition-colors">
-                      Dashboard
-                    </Link>
-                    <Link to="/dispatcher/deliveries" className="text-sm font-medium hover:text-primary transition-colors">
-                      My Deliveries
-                    </Link>
+                    <Link to="/dashboard">Dashboard</Link>
+                    <Link to="/dispatcher/deliveries">My Deliveries</Link>
                   </>
                 )}
               </>
             )}
           </nav>
 
-          {/* User Section */}
+          {/* Right side */}
           <div className="flex items-center space-x-4">
-            {userRole ? (
+            {user ? (
               <>
-                {/* Notifications */}
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs bg-accent">
-                    3
-                  </Badge>
-                </Button>
-
-                {/* User Menu */}
+                <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
+                    <Button variant="ghost" className="h-8 w-8 rounded-full">
+                      <Avatar>
+                        <AvatarImage src="/placeholder-avatar.jpg" alt={user.name} />
+                        <AvatarFallback>{user.name?.[0]?.toUpperCase()}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">John Doe</p>
-                        <div className="flex items-center gap-2">
-                          <Badge className={`text-xs ${getRoleColor(userRole)}`}>
-                            {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                          </Badge>
-                        </div>
+                    <div className="flex items-center gap-2 p-2">
+                      <div className="flex flex-col">
+                        <p className="font-medium">{user.name}</p>
+                        <Badge className={`text-xs ${getRoleColor(role)}`}>
+                          {role?.charAt(0).toUpperCase() + role?.slice(1)}
+                        </Badge>
                       </div>
                     </div>
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Log out

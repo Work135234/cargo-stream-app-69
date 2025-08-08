@@ -41,11 +41,11 @@ const Index = () => {
                 Welcome to <span className="text-primary">CargoStream</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Your comprehensive delivery booking platform. Connect customers, manage logistics, 
+                Your comprehensive delivery booking platform. Connect customers, manage logistics,
                 and track shipments with our modern, efficient solution.
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="text-lg px-8">
                 <Link to="/register">Get Started Today</Link>
@@ -67,7 +67,7 @@ const Index = () => {
               Streamline your logistics with our comprehensive platform designed for modern delivery needs
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <Card key={index} className="text-center hover:shadow-lg transition-shadow">
@@ -97,7 +97,7 @@ const Index = () => {
               Three dedicated portals designed for different roles in the logistics ecosystem
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader className="text-center">

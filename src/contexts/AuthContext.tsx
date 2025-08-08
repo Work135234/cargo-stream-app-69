@@ -1,52 +1,81 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type UserRole = 'customer' | 'admin' | 'dispatcher';
-
-export interface User {
+interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
-  avatar?: string;
+  role: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (userData: User) => void;
-  logout: () => void;
+  token: string | null;
   isAuthenticated: boolean;
+  login: (token: string, user: User) => void;
+  logout: () => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (userData: User) => {
+  useEffect(() => {
+    // Check for existing auth data on app load
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (storedToken && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setToken(storedToken);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = (newToken: string, userData: User) => {
+    setToken(newToken);
     setUser(userData);
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
+    setToken(null);
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
-  const isAuthenticated = !!user;
+  const value: AuthContextType = {
+    user,
+    token,
+    isAuthenticated: !!token && !!user,
+    login,
+    logout,
+    loading,
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

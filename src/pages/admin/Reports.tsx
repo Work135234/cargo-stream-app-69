@@ -257,8 +257,8 @@ export default function Reports() {
                     <span className="text-sm">${item.revenue.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full" 
+                    <div
+                      className="bg-primary h-2 rounded-full"
                       style={{ width: `${item.percentage}%` }}
                     />
                   </div>

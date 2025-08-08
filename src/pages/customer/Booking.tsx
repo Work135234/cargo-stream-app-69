@@ -39,23 +39,45 @@ export default function Booking() {
     }
 
     setCalculating(true);
-    
-    // Simulate API call for fare calculation
-    setTimeout(() => {
-      const baseRate = formData.transportMode === "truck" ? 2.5 : 1.8; // per km
-      const weightRate = 0.15; // per kg
-      const baseFare = 50;
-      const distance = 150; // Mock distance in km
-      
-      const calculatedFare = baseFare + (distance * baseRate) + (parseFloat(formData.weight) * weightRate);
-      setEstimatedFare(calculatedFare);
+
+    try {
+      const response = await fetch('/api/bookings/calculate-fare', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          distance: 150, // This should be calculated based on pickup and destination
+          weight: parseFloat(formData.weight),
+          transportMode: formData.transportMode
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEstimatedFare(data.fare);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to calculate fare",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to calculate fare",
+        variant: "destructive"
+      });
+    } finally {
       setCalculating(false);
-    }, 1500);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!estimatedFare) {
       toast({
         title: "Calculate Fare First",
@@ -65,10 +87,51 @@ export default function Booking() {
       return;
     }
 
-    toast({
-      title: "Booking Created Successfully!",
-      description: `Your booking has been created. Estimated fare: $${estimatedFare.toFixed(2)}`,
-    });
+    try {
+      const bookingData = {
+        pickupAddress: formData.pickupAddress,
+        deliveryAddress: formData.destinationAddress,
+        transportMode: formData.transportMode,
+        productType: formData.productType,
+        weight: parseFloat(formData.weight),
+        dimensions: formData.dimensions,
+        pickupDate: date,
+        specialInstructions: formData.specialInstructions,
+        contactName: formData.contactName,
+        contactPhone: formData.contactPhone,
+        fare: estimatedFare
+      };
+
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(bookingData)
+      });
+
+      if (response.ok) {
+        const booking = await response.json();
+        toast({
+          title: "Booking Created Successfully!",
+          description: `Your booking has been created. Booking ID: ${booking._id}`,
+        });
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create booking",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create booking",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -97,7 +160,7 @@ export default function Booking() {
                     id="pickup"
                     placeholder="Enter pickup address"
                     value={formData.pickupAddress}
-                    onChange={(e) => setFormData({...formData, pickupAddress: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pickupAddress: e.target.value })}
                     required
                   />
                 </div>
@@ -107,7 +170,7 @@ export default function Booking() {
                     id="destination"
                     placeholder="Enter destination address"
                     value={formData.destinationAddress}
-                    onChange={(e) => setFormData({...formData, destinationAddress: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, destinationAddress: e.target.value })}
                     required
                   />
                 </div>
@@ -127,9 +190,9 @@ export default function Booking() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="transport">Transport Mode</Label>
-                    <Select 
-                      value={formData.transportMode} 
-                      onValueChange={(value) => setFormData({...formData, transportMode: value})}
+                    <Select
+                      value={formData.transportMode}
+                      onValueChange={(value) => setFormData({ ...formData, transportMode: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select transport mode" />
@@ -152,9 +215,9 @@ export default function Booking() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="product">Product Type</Label>
-                    <Select 
-                      value={formData.productType} 
-                      onValueChange={(value) => setFormData({...formData, productType: value})}
+                    <Select
+                      value={formData.productType}
+                      onValueChange={(value) => setFormData({ ...formData, productType: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select product type" />
@@ -179,7 +242,7 @@ export default function Booking() {
                       type="number"
                       placeholder="Enter weight in kg"
                       value={formData.weight}
-                      onChange={(e) => setFormData({...formData, weight: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                       required
                     />
                   </div>
@@ -189,7 +252,7 @@ export default function Booking() {
                       id="dimensions"
                       placeholder="e.g., 100×50×30"
                       value={formData.dimensions}
-                      onChange={(e) => setFormData({...formData, dimensions: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
                     />
                   </div>
                 </div>
@@ -221,7 +284,7 @@ export default function Booking() {
                     id="instructions"
                     placeholder="Any special handling requirements or delivery instructions"
                     value={formData.specialInstructions}
-                    onChange={(e) => setFormData({...formData, specialInstructions: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, specialInstructions: e.target.value })}
                     rows={3}
                   />
                 </div>
@@ -242,7 +305,7 @@ export default function Booking() {
                       id="contactName"
                       placeholder="Delivery contact person"
                       value={formData.contactName}
-                      onChange={(e) => setFormData({...formData, contactName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                       required
                     />
                   </div>
@@ -253,7 +316,7 @@ export default function Booking() {
                       type="tel"
                       placeholder="Phone number"
                       value={formData.contactPhone}
-                      onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
                       required
                     />
                   </div>
@@ -273,15 +336,15 @@ export default function Booking() {
                 <CardDescription>Get instant pricing estimates</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button 
-                  type="button" 
-                  onClick={calculateFare} 
+                <Button
+                  type="button"
+                  onClick={calculateFare}
                   className="w-full"
                   disabled={calculating}
                 >
                   {calculating ? "Calculating..." : "Calculate Fare"}
                 </Button>
-                
+
                 {estimatedFare && (
                   <div className="p-4 bg-primary/5 rounded-lg space-y-2">
                     <div className="flex justify-between text-sm">

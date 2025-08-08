@@ -7,35 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Shield, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (role: UserRole) => {
+  const handleLogin = async (role: 'customer' | 'admin' | 'dispatcher') => {
     setLoading(true);
-    
-    // Simulate API call - in real app, this would authenticate with backend
-    setTimeout(() => {
-      // Mock user data based on role
-      const userData = {
-        id: `${role}-001`,
-        name: role === 'admin' ? 'Sarah Johnson' : role === 'dispatcher' ? 'Mike Rodriguez' : 'John Smith',
-        email: `${role}@cargostream.com`,
-        role: role,
-        avatar: undefined
-      };
 
-      login(userData);
-      
+    // Simulate API call
+    setTimeout(() => {
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${userData.name}!`,
+        description: `Welcome back, ${role}!`,
       });
-      
+
       // Navigate based on role
       switch (role) {
         case 'customer':
@@ -52,7 +39,7 @@ export default function Login() {
     }, 1000);
   };
 
-  const LoginForm = ({ role }: { role: UserRole }) => (
+  const LoginForm = ({ role }: { role: 'customer' | 'admin' | 'dispatcher' }) => (
     <form
       onSubmit={(e) => {
         e.preventDefault();
@@ -122,15 +109,15 @@ export default function Login() {
                   Dispatcher
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="customer" className="mt-6">
                 <LoginForm role="customer" />
               </TabsContent>
-              
+
               <TabsContent value="admin" className="mt-6">
                 <LoginForm role="admin" />
               </TabsContent>
-              
+
               <TabsContent value="dispatcher" className="mt-6">
                 <LoginForm role="dispatcher" />
               </TabsContent>

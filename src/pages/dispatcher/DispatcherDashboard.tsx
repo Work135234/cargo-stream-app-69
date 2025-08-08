@@ -1,108 +1,158 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Package,
-  MapPin,
-  Clock,
-  CheckCircle,
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { 
+  Package, 
+  Truck, 
+  MapPin, 
+  Clock, 
+  CheckCircle, 
   AlertCircle,
-  Truck,
-  Route,
+  Phone,
+  Navigation,
   FileText,
   Calendar
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DispatcherDashboard() {
   const { toast } = useToast();
+  const [selectedDelivery, setSelectedDelivery] = useState<string | null>(null);
   
   // Mock data for dispatcher
-  const stats = {
-    assignedDeliveries: 8,
-    completedToday: 3,
-    pendingPickups: 2,
-    inTransit: 3
+  const dispatcherInfo = {
+    name: "Mike Johnson",
+    vehicle: "Truck - ABC-123",
+    zone: "Northeast Region",
+    shiftsCompleted: 247,
+    rating: 4.8
   };
 
   const assignedDeliveries = [
     {
-      id: "DEL001",
-      customerName: "Tech Corp",
-      from: "New York, NY",
-      to: "Boston, MA",
-      status: "In Transit",
-      priority: "High",
-      estimatedTime: "2 hours",
-      distance: "215 miles",
-      notes: "Fragile items - handle with care"
+      id: "BK1247",
+      customer: "John Smith",
+      phone: "+1 555-123-4567",
+      from: "123 Main St, New York, NY",
+      to: "456 Oak Ave, Boston, MA",
+      status: "Picked Up",
+      priority: "Standard",
+      estimatedTime: "3h 30m",
+      notes: "Fragile items - handle with care",
+      pickupTime: "2024-01-15 09:00",
+      deliveryTime: "2024-01-15 14:30"
     },
     {
-      id: "DEL002",
-      customerName: "John Smith",
-      from: "Chicago, IL",
-      to: "Detroit, MI",
-      status: "Pending Pickup",
-      priority: "Medium",
-      estimatedTime: "4 hours",
-      distance: "280 miles",
-      notes: "Customer requested morning delivery"
+      id: "BK1248",
+      customer: "Sarah Wilson", 
+      phone: "+1 555-234-5678",
+      from: "789 Pine St, New York, NY",
+      to: "321 Elm St, Hartford, CT",
+      status: "Ready for Pickup",
+      priority: "Express",
+      estimatedTime: "2h 45m",
+      notes: "Business delivery - contact reception",
+      pickupTime: "2024-01-15 11:00",
+      deliveryTime: "2024-01-15 16:00"
     },
     {
-      id: "DEL003",
-      customerName: "Global Logistics",
-      from: "Los Angeles, CA",
-      to: "San Diego, CA",
-      status: "Ready to Pickup",
-      priority: "Low",
-      estimatedTime: "3 hours",
-      distance: "120 miles",
-      notes: "Multiple packages"
+      id: "BK1249",
+      customer: "Tech Corp",
+      phone: "+1 555-345-6789", 
+      from: "654 Cedar Rd, New York, NY",
+      to: "987 Maple Dr, Providence, RI",
+      status: "Scheduled",
+      priority: "Standard",
+      estimatedTime: "4h 15m",
+      notes: "Large shipment - multiple packages",
+      pickupTime: "2024-01-15 13:00",
+      deliveryTime: "2024-01-15 18:30"
     }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "In Transit": return "accent";
-      case "Pending Pickup": return "warning";
-      case "Ready to Pickup": return "success";
-      case "Completed": return "muted";
-      default: return "secondary";
+      case "Delivered": return "bg-success";
+      case "Picked Up": return "bg-accent";
+      case "Ready for Pickup": return "bg-warning";
+      case "Scheduled": return "bg-muted-foreground";
+      default: return "bg-muted";
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "High": return "destructive";
-      case "Medium": return "accent";
-      case "Low": return "success";
-      default: return "secondary";
-    }
+    return priority === "Express" ? "bg-destructive" : "bg-primary";
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "In Transit": return <Truck className="h-4 w-4" />;
-      case "Pending Pickup": return <Clock className="h-4 w-4" />;
-      case "Ready to Pickup": return <Package className="h-4 w-4" />;
-      case "Completed": return <CheckCircle className="h-4 w-4" />;
-      default: return <AlertCircle className="h-4 w-4" />;
+      case "Delivered": return <CheckCircle className="h-4 w-4" />;
+      case "Picked Up": return <Truck className="h-4 w-4" />;
+      case "Ready for Pickup": return <AlertCircle className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
     }
   };
 
-  const updateDeliveryStatus = (deliveryId: string, newStatus: string) => {
+  const updateDeliveryStatus = (deliveryId: string, newStatus: string, notes?: string) => {
     toast({
       title: "Status Updated",
-      description: `Delivery ${deliveryId} status changed to ${newStatus}`,
+      description: `Delivery ${deliveryId} marked as ${newStatus}`,
     });
   };
 
-  const addNote = (deliveryId: string) => {
-    toast({
-      title: "Note Added",
-      description: `Note added to delivery ${deliveryId}`,
-    });
+  const StatusUpdateDialog = ({ delivery }: { delivery: any }) => {
+    const [newStatus, setNewStatus] = useState(delivery.status);
+    const [notes, setNotes] = useState("");
+
+    return (
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Update Delivery Status</DialogTitle>
+          <DialogDescription>
+            Update the status for delivery #{delivery.id}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="status">New Status</Label>
+            <Select value={newStatus} onValueChange={setNewStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Scheduled">Scheduled</SelectItem>
+                <SelectItem value="Ready for Pickup">Ready for Pickup</SelectItem>
+                <SelectItem value="Picked Up">Picked Up</SelectItem>
+                <SelectItem value="In Transit">In Transit</SelectItem>
+                <SelectItem value="Out for Delivery">Out for Delivery</SelectItem>
+                <SelectItem value="Delivered">Delivered</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Delivery Notes (Optional)</Label>
+            <Textarea
+              id="notes"
+              placeholder="Add any notes about the delivery..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <Button 
+            onClick={() => updateDeliveryStatus(delivery.id, newStatus, notes)}
+            className="w-full"
+          >
+            Update Status
+          </Button>
+        </div>
+      </DialogContent>
+    );
   };
 
   return (
@@ -112,60 +162,64 @@ export default function DispatcherDashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dispatcher Dashboard</h1>
           <p className="text-muted-foreground">
-            Manage your assigned deliveries and update statuses
+            Welcome back, {dispatcherInfo.name}
           </p>
         </div>
-        <Button>
-          <Route className="mr-2 h-4 w-4" />
-          Optimize Routes
-        </Button>
+        <div className="flex gap-2 mt-4 sm:mt-0">
+          <Button variant="outline">
+            <Navigation className="mr-2 h-4 w-4" />
+            Open GPS
+          </Button>
+          <Button variant="outline">
+            <Phone className="mr-2 h-4 w-4" />
+            Call Support
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Driver Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assigned Deliveries</CardTitle>
+            <CardTitle className="text-sm font-medium">Today's Deliveries</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.assignedDeliveries}</div>
-            <p className="text-xs text-muted-foreground">Active assignments</p>
+            <div className="text-2xl font-bold">{assignedDeliveries.length}</div>
+            <p className="text-xs text-muted-foreground">Assigned to you</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completedToday}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-success">+2</span> from yesterday
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Pickups</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingPickups}</div>
-            <p className="text-xs text-muted-foreground">Awaiting collection</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Transit</CardTitle>
+            <CardTitle className="text-sm font-medium">Vehicle</CardTitle>
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.inTransit}</div>
-            <p className="text-xs text-muted-foreground">Currently delivering</p>
+            <div className="text-lg font-bold">{dispatcherInfo.vehicle}</div>
+            <p className="text-xs text-muted-foreground">{dispatcherInfo.zone}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Shifts</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dispatcherInfo.shiftsCompleted}</div>
+            <p className="text-xs text-muted-foreground">Completed successfully</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rating</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dispatcherInfo.rating}/5</div>
+            <p className="text-xs text-muted-foreground">Customer rating</p>
           </CardContent>
         </Card>
       </div>
@@ -173,80 +227,93 @@ export default function DispatcherDashboard() {
       {/* Assigned Deliveries */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Assigned Deliveries</CardTitle>
-          <CardDescription>Manage and update your delivery assignments</CardDescription>
+          <CardTitle>Assigned Deliveries</CardTitle>
+          <CardDescription>Manage your delivery schedule</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {assignedDeliveries.map((delivery) => (
               <div
                 key={delivery.id}
-                className="p-4 border rounded-lg space-y-4"
+                className="border rounded-lg p-4 space-y-4 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">#{delivery.id}</h3>
-                      <Badge 
-                        variant="secondary" 
-                        className={`bg-${getStatusColor(delivery.status)}/10 text-${getStatusColor(delivery.status)}`}
-                      >
-                        {getStatusIcon(delivery.status)}
-                        <span className="ml-1">{delivery.status}</span>
-                      </Badge>
-                      <Badge 
-                        variant="outline"
-                        className={`border-${getPriorityColor(delivery.priority)} text-${getPriorityColor(delivery.priority)}`}
-                      >
-                        {delivery.priority} Priority
-                      </Badge>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded-full">
+                      <Package className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="font-medium">{delivery.customerName}</p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {delivery.from} → {delivery.to}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center">
-                        <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                        Est. Time: {delivery.estimatedTime}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">#{delivery.id}</p>
+                        <Badge className={getStatusColor(delivery.status)}>
+                          {getStatusIcon(delivery.status)}
+                          <span className="ml-1">{delivery.status}</span>
+                        </Badge>
+                        <Badge className={getPriorityColor(delivery.priority)}>
+                          {delivery.priority}
+                        </Badge>
                       </div>
-                      <div className="flex items-center">
-                        <Route className="h-3 w-3 mr-1 text-muted-foreground" />
-                        Distance: {delivery.distance}
-                      </div>
+                      <p className="text-sm text-muted-foreground">{delivery.customer}</p>
                     </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">ETA: {delivery.estimatedTime}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Pickup: {delivery.pickupTime}
+                    </p>
                   </div>
                 </div>
 
-                {delivery.notes && (
-                  <div className="bg-muted/50 p-3 rounded-lg">
-                    <div className="flex items-start">
-                      <FileText className="h-4 w-4 mr-2 text-muted-foreground mt-0.5" />
-                      <p className="text-sm">{delivery.notes}</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Pickup</p>
+                        <p className="text-sm text-muted-foreground">{delivery.from}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-accent mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Delivery</p>
+                        <p className="text-sm text-muted-foreground">{delivery.to}</p>
+                      </div>
                     </div>
                   </div>
-                )}
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{delivery.phone}</span>
+                    </div>
+                    {delivery.notes && (
+                      <div className="flex items-start gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <p className="text-sm text-muted-foreground">{delivery.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => updateDeliveryStatus(delivery.id, "In Transit")}
-                  >
-                    Update Status
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => addNote(delivery.id)}
-                  >
-                    <FileText className="mr-1 h-3 w-3" />
-                    Add Note
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        Update Status
+                      </Button>
+                    </DialogTrigger>
+                    <StatusUpdateDialog delivery={delivery} />
+                  </Dialog>
+                  
                   <Button size="sm" variant="outline">
-                    <MapPin className="mr-1 h-3 w-3" />
-                    View Route
+                    <Phone className="mr-1 h-3 w-3" />
+                    Call Customer
+                  </Button>
+                  
+                  <Button size="sm" variant="outline">
+                    <Navigation className="mr-1 h-3 w-3" />
+                    Navigate
                   </Button>
                 </div>
               </div>
@@ -254,60 +321,6 @@ export default function DispatcherDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="mr-2 h-5 w-5 text-accent" />
-              Update Status
-            </CardTitle>
-            <CardDescription>
-              Quickly update delivery status and location
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full">
-              Update Current Delivery
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FileText className="mr-2 h-5 w-5 text-primary" />
-              Add Notes
-            </CardTitle>
-            <CardDescription>
-              Add delivery notes and customer feedback
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">
-              Add Note
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="mr-2 h-5 w-5 text-success" />
-              View Schedule
-            </CardTitle>
-            <CardDescription>
-              Check today's delivery schedule
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">
-              Open Schedule
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  MapPin, 
-  Clock, 
-  Package, 
-  Truck, 
-  CheckCircle, 
+import {
+  Search,
+  MapPin,
+  Clock,
+  Package,
+  Truck,
+  CheckCircle,
   AlertCircle,
   Calendar,
   Phone,
@@ -20,7 +20,7 @@ import {
 
 export default function Tracking() {
   const [trackingId, setTrackingId] = useState("");
-  
+
   // Mock data for tracking
   const trackingData = {
     id: "BK001",
@@ -77,7 +77,7 @@ export default function Tracking() {
     },
     {
       id: "BK002",
-      from: "Chicago, IL", 
+      from: "Chicago, IL",
       to: "Detroit, MI",
       status: "Delivered",
       date: "2024-01-14",
@@ -86,7 +86,7 @@ export default function Tracking() {
     {
       id: "BK003",
       from: "Los Angeles, CA",
-      to: "San Diego, CA", 
+      to: "San Diego, CA",
       status: "Pending",
       date: "2024-01-16",
       progress: 0
@@ -124,7 +124,7 @@ export default function Tracking() {
           <TabsTrigger value="track">Track by ID</TabsTrigger>
           <TabsTrigger value="all">All Bookings</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="track" className="space-y-6">
           {/* Tracking Search */}
           <Card>
@@ -176,7 +176,7 @@ export default function Tracking() {
                     </div>
                     <Progress value={trackingData.progress} className="h-2" />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center">
                       <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -242,12 +242,12 @@ export default function Tracking() {
                       <p className="text-sm text-muted-foreground">Delivery Driver</p>
                     </div>
                   </div>
-                  
+
                   <Button variant="outline" className="w-full">
                     <Phone className="mr-2 h-4 w-4" />
                     Call Driver
                   </Button>
-                  
+
                   <div className="text-sm text-muted-foreground">
                     <p>Phone: {trackingData.driverPhone}</p>
                   </div>
