@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,46 +12,52 @@ export default function Reports() {
   const { toast } = useToast();
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
-  const [reportType, setReportType] = useState("");
+  // Only allow valid report types
+  const validReportTypes = ["revenue", "bookings"];
+  const [reportType, setReportType] = useState(validReportTypes[0]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [transportFilter, setTransportFilter] = useState("all");
 
-  const reportData = {
-    summary: {
-      totalBookings: 1247,
-      totalRevenue: 125480.50,
-      averageOrderValue: 100.63,
-      completionRate: 96.8
-    },
-    statusBreakdown: [
-      { status: "Delivered", count: 1207, percentage: 96.8 },
-      { status: "In Transit", count: 25, percentage: 2.0 },
-      { status: "Pending", count: 15, percentage: 1.2 }
-    ],
-    transportBreakdown: [
-      { mode: "Truck", count: 756, revenue: 75600, percentage: 60.6 },
-      { mode: "Train", count: 491, revenue: 49880, percentage: 39.4 }
-    ],
-    monthlyTrends: [
-      { month: "Jan", bookings: 98, revenue: 9800 },
-      { month: "Feb", bookings: 142, revenue: 14200 },
-      { month: "Mar", bookings: 186, revenue: 18600 },
-      { month: "Apr", bookings: 203, revenue: 20300 },
-      { month: "May", bookings: 195, revenue: 19500 },
-      { month: "Jun", bookings: 167, revenue: 16700 }
-    ]
-  };
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/api/admin/reports?type=${reportType}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setReportData(result.data || null);
+        } else {
+          setError(result.message || 'Failed to fetch report');
+        }
+      } catch (err) {
+        setError('Failed to fetch report');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, [reportType]);
 
   const handleGenerateReport = () => {
-    if (!reportType) {
+    if (!validReportTypes.includes(reportType)) {
       toast({
-        title: "Select Report Type",
-        description: "Please select a report type to generate",
+        title: "Invalid Report Type",
+        description: "Please select a valid report type.",
         variant: "destructive"
       });
       return;
     }
-
     toast({
       title: "Report Generated",
       description: `${reportType} report has been generated successfully`,
@@ -108,7 +114,7 @@ export default function Reports() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${reportData.summary.averageOrderValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${typeof reportData?.summary?.averageOrderValue === 'number' ? reportData.summary.averageOrderValue.toFixed(2) : '0.00'}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-success">+3%</span> from last period
             </p>
@@ -146,8 +152,6 @@ export default function Reports() {
                 <SelectContent>
                   <SelectItem value="revenue">Revenue Report</SelectItem>
                   <SelectItem value="bookings">Bookings Report</SelectItem>
-                  <SelectItem value="performance">Performance Report</SelectItem>
-                  <SelectItem value="customer">Customer Report</SelectItem>
                 </SelectContent>
               </Select>
             </div>

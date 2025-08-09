@@ -65,9 +65,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications);
+        showToast('Notifications Updated', 'Fetched latest notifications.');
+      } else {
+        showToast('Notification Error', 'Failed to fetch notifications.', 'destructive');
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      showToast('Notification Error', 'Error fetching notifications.', 'destructive');
     } finally {
       setLoading(false);
     }

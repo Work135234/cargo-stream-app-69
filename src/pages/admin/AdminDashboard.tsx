@@ -1,8 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
 import {
   Package,
   Truck,
@@ -15,6 +15,30 @@ import {
   AlertTriangle,
   Train
 } from "lucide-react";
+
+function AdminNavbar() {
+  const location = useLocation();
+  const navLinks = [
+    { to: "/admin/dashboard", label: "Dashboard" },
+    { to: "/admin/users", label: "Users" },
+    { to: "/admin/bookings", label: "Bookings" },
+    { to: "/admin/reports", label: "Reports" },
+    { to: "/admin/pricing", label: "Pricing" }
+  ];
+  return (
+    <nav className="flex gap-4 mb-6 border-b pb-2">
+      {navLinks.map(link => (
+        <Link
+          key={link.to}
+          to={link.to}
+          className={`px-3 py-2 rounded font-medium ${location.pathname === link.to ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted"}`}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 export default function AdminDashboard() {
   // Mock data for admin dashboard
@@ -86,6 +110,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <AdminNavbar />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -97,6 +122,29 @@ export default function AdminDashboard() {
         <div className="flex gap-2 mt-4 sm:mt-0">
           <Button variant="outline">Export Report</Button>
           <Button>Manage Settings</Button>
+          <Button variant="outline" onClick={async () => {
+            // Send a test notification to the current admin
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const response = await fetch('http://localhost:5000/api/notifications', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Test Notification',
+                message: 'This is a test notification for admin.',
+                type: 'system',
+                priority: 'high'
+              })
+            });
+            if (response.ok) {
+              alert('Test notification sent! Check your notification bell.');
+            } else {
+              alert('Failed to send test notification.');
+            }
+          }}>Send Test Notification</Button>
         </div>
       </div>
 

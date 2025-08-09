@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,41 +16,36 @@ export default function ManageBookings() {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [assignedDriver, setAssignedDriver] = useState("");
 
-  const bookings = [
-    {
-      id: "BK1247",
-      customer: "John Smith",
-      from: "New York, NY",
-      to: "Boston, MA",
-      status: "In Transit",
-      amount: 150.00,
-      driver: "Mike Johnson",
-      mode: "truck",
-      date: "2024-01-15"
-    },
-    {
-      id: "BK1246",
-      customer: "Sarah Wilson",
-      from: "Chicago, IL",
-      to: "Detroit, MI",
-      status: "Pending",
-      amount: 120.00,
-      driver: "Unassigned",
-      mode: "truck",
-      date: "2024-01-14"
-    },
-    {
-      id: "BK1245",
-      customer: "Tech Corp",
-      from: "Los Angeles, CA",
-      to: "San Francisco, CA",
-      status: "Delivered",
-      amount: 200.00,
-      driver: "Train Schedule A",
-      mode: "train",
-      date: "2024-01-13"
-    }
-  ];
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/admin/bookings', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setBookings(result.bookings || []);
+        } else {
+          setError(result.message || 'Failed to fetch bookings');
+        }
+      } catch (err) {
+        setError('Failed to fetch bookings');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, []);
 
   const drivers = [
     "Mike Johnson",
@@ -90,9 +85,9 @@ export default function ManageBookings() {
   };
 
   const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.customer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || booking.status.toLowerCase() === statusFilter;
+    const matchesSearch = (booking.id ? booking.id.toLowerCase() : "").includes(searchTerm.toLowerCase()) ||
+      (booking.customer ? booking.customer.toLowerCase() : "").includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || (booking.status ? booking.status.toLowerCase() : "") === statusFilter;
     return matchesSearch && matchesStatus;
   });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,80 +18,43 @@ import {
   User
 } from "lucide-react";
 
-export default function Tracking() {
+function Tracking() {
   const [trackingId, setTrackingId] = useState("");
+  const [bookings, setBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const token = localStorage.getItem('token');
 
-  // Mock data for tracking
-  const trackingData = {
-    id: "BK001",
-    status: "In Transit",
-    progress: 65,
-    from: "New York, NY",
-    to: "Boston, MA",
-    estimatedDelivery: "2024-01-16 14:30",
-    driver: "Mike Johnson",
-    driverPhone: "+1 555-123-4567",
-    vehicle: "Truck - License: ABC-123",
-    timeline: [
-      {
-        title: "Order Placed",
-        description: "Booking confirmed and payment processed",
-        time: "2024-01-15 09:00",
-        status: "completed"
-      },
-      {
-        title: "Package Picked Up",
-        description: "Driver collected package from pickup location",
-        time: "2024-01-15 11:30",
-        status: "completed"
-      },
-      {
-        title: "In Transit",
-        description: "Package is on the way to destination",
-        time: "2024-01-15 12:15",
-        status: "current"
-      },
-      {
-        title: "Out for Delivery",
-        description: "Package is out for final delivery",
-        time: "2024-01-16 10:00",
-        status: "pending"
-      },
-      {
-        title: "Delivered",
-        description: "Package delivered to recipient",
-        time: "2024-01-16 14:30",
-        status: "pending"
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:5000/api/customer/bookings', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setBookings(result.bookings || []);
+        } else {
+          setError(result.message || 'Failed to fetch bookings');
+        }
+      } catch (err) {
+        setError('Failed to fetch bookings');
+      } finally {
+        setLoading(false);
       }
-    ]
-  };
+    };
+    fetchBookings();
+  }, [token]);
 
-  const allBookings = [
-    {
-      id: "BK001",
-      from: "New York, NY",
-      to: "Boston, MA",
-      status: "In Transit",
-      date: "2024-01-15",
-      progress: 65
-    },
-    {
-      id: "BK002",
-      from: "Chicago, IL",
-      to: "Detroit, MI",
-      status: "Delivered",
-      date: "2024-01-14",
-      progress: 100
-    },
-    {
-      id: "BK003",
-      from: "Los Angeles, CA",
-      to: "San Diego, CA",
-      status: "Pending",
-      date: "2024-01-16",
-      progress: 0
-    }
-  ];
+  const handleTrack = () => {
+    const found = bookings.find(b => b._id === trackingId);
+    setSelectedBooking(found || null);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -114,19 +77,14 @@ export default function Tracking() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Track Your Shipments</h1>
-        <p className="text-muted-foreground">
-          Monitor your deliveries in real-time
-        </p>
+        <p className="text-muted-foreground">Monitor your deliveries in real-time</p>
       </div>
-
       <Tabs defaultValue="track" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="track">Track by ID</TabsTrigger>
           <TabsTrigger value="all">All Bookings</TabsTrigger>
         </TabsList>
-
         <TabsContent value="track" className="space-y-6">
-          {/* Tracking Search */}
           <Card>
             <CardHeader>
               <CardTitle>Track Your Package</CardTitle>
@@ -139,141 +97,69 @@ export default function Tracking() {
                   value={trackingId}
                   onChange={(e) => setTrackingId(e.target.value)}
                 />
-                <Button>
+                <Button onClick={handleTrack} disabled={loading}>
                   <Search className="mr-2 h-4 w-4" />
                   Track
                 </Button>
               </div>
             </CardContent>
           </Card>
-
-          {/* Tracking Results */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-6">
-              {/* Current Status */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center">
-                        <Package className="mr-2 h-5 w-5" />
-                        Booking #{trackingData.id}
-                      </CardTitle>
-                      <CardDescription>
-                        {trackingData.from} → {trackingData.to}
-                      </CardDescription>
-                    </div>
-                    <Badge className={getStatusColor(trackingData.status)}>
-                      {trackingData.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress</span>
-                      <span>{trackingData.progress}%</span>
-                    </div>
-                    <Progress value={trackingData.progress} className="h-2" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+          {selectedBooking ? (
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Estimated Delivery</p>
-                        <p className="text-muted-foreground">{trackingData.estimatedDelivery}</p>
+                        <CardTitle className="flex items-center">
+                          <Package className="mr-2 h-5 w-5" />
+                          Booking #{selectedBooking._id}
+                        </CardTitle>
+                        <CardDescription>
+                          {selectedBooking.pickupAddress} → {selectedBooking.deliveryAddress}
+                        </CardDescription>
+                      </div>
+                      <Badge>{selectedBooking.status}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Fare</span>
+                        <span>${selectedBooking.fare}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Distance</span>
+                        <span>{selectedBooking.distance} km</span>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <Truck className="mr-2 h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+                {/* Add more details/timeline if available */}
+              </div>
+              {/* Dispatcher Info */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Dispatcher Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedBooking.dispatcher ? (
                       <div>
-                        <p className="font-medium">Vehicle</p>
-                        <p className="text-muted-foreground">{trackingData.vehicle}</p>
+                        <div className="font-medium">{selectedBooking.dispatcher.name}</div>
+                        <div className="text-sm text-muted-foreground">{selectedBooking.dispatcher.email}</div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Timeline */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Delivery Timeline</CardTitle>
-                  <CardDescription>Track your package journey</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {trackingData.timeline.map((event, index) => (
-                      <div key={index} className="flex space-x-4">
-                        <div className="flex flex-col items-center">
-                          {getTimelineIcon(event.status)}
-                          {index < trackingData.timeline.length - 1 && (
-                            <div className="w-px h-8 bg-border mt-2" />
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium">{event.title}</p>
-                            <p className="text-sm text-muted-foreground">{event.time}</p>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{event.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                    ) : (
+                      <div className="text-muted-foreground">No dispatcher assigned yet.</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-
-            {/* Driver Info */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Driver Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{trackingData.driver}</p>
-                      <p className="text-sm text-muted-foreground">Delivery Driver</p>
-                    </div>
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    <Phone className="mr-2 h-4 w-4" />
-                    Call Driver
-                  </Button>
-
-                  <div className="text-sm text-muted-foreground">
-                    <p>Phone: {trackingData.driverPhone}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Need Help?</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full">
-                    Contact Support
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Report Issue
-                  </Button>
-                  <div className="text-xs text-muted-foreground">
-                    Support available 24/7
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">No booking found for this ID.</div>
+          )}
         </TabsContent>
-
         <TabsContent value="all" className="space-y-6">
           <Card>
             <CardHeader>
@@ -282,9 +168,9 @@ export default function Tracking() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {allBookings.map((booking) => (
+                {bookings.map((booking) => (
                   <div
-                    key={booking.id}
+                    key={booking._id}
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
@@ -293,28 +179,21 @@ export default function Tracking() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium">#{booking.id}</p>
-                          <Badge className={getStatusColor(booking.status)}>
-                            {booking.status}
-                          </Badge>
+                          <p className="font-medium">#{booking._id}</p>
+                          <Badge>{booking.status}</Badge>
                         </div>
                         <div className="flex items-center text-sm text-muted-foreground mt-1">
                           <MapPin className="h-3 w-3 mr-1" />
-                          {booking.from} → {booking.to}
+                          {booking.pickupAddress} → {booking.deliveryAddress}
                         </div>
-                        {booking.status === "In Transit" && (
-                          <div className="mt-2">
-                            <Progress value={booking.progress} className="h-1 w-48" />
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {new Date(booking.date).toLocaleDateString()}
+                        {new Date(booking.createdAt).toLocaleDateString()}
                       </div>
-                      <Button variant="outline" size="sm" className="mt-2">
+                      <Button variant="outline" size="sm" className="mt-2" onClick={() => { setTrackingId(booking._id); handleTrack(); }}>
                         View Details
                       </Button>
                     </div>
@@ -325,6 +204,9 @@ export default function Tracking() {
           </Card>
         </TabsContent>
       </Tabs>
+      {error && <div className="text-red-500 text-center">{error}</div>}
     </div>
   );
 }
+
+export default Tracking;

@@ -16,44 +16,36 @@ export default function ManageUsers() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [newUserRole, setNewUserRole] = useState("");
 
-  const users = [
-    {
-      id: "USR001",
-      name: "John Smith",
-      email: "john.smith@email.com",
-      role: "customer",
-      status: "active",
-      joinDate: "2024-01-10",
-      totalBookings: 12
-    },
-    {
-      id: "USR002",
-      name: "Mike Johnson",
-      email: "mike.johnson@email.com",
-      role: "dispatcher",
-      status: "active",
-      joinDate: "2024-01-05",
-      totalBookings: 0
-    },
-    {
-      id: "USR003",
-      name: "Sarah Wilson",
-      email: "sarah.wilson@email.com",
-      role: "customer",
-      status: "inactive",
-      joinDate: "2024-01-08",
-      totalBookings: 5
-    },
-    {
-      id: "USR004",
-      name: "Admin User",
-      email: "admin@cargostream.com",
-      role: "admin",
-      status: "active",
-      joinDate: "2024-01-01",
-      totalBookings: 0
-    }
-  ];
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/admin/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setUsers(result.users || []);
+        } else {
+          setError(result.message || 'Failed to fetch users');
+        }
+      } catch (err) {
+        setError('Failed to fetch users');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -250,8 +242,11 @@ export default function ManageUsers() {
                     </div>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground">
-                      Joined: {new Date(user.joinDate).toLocaleDateString()} •
-                      Bookings: {user.totalBookings}
+                      Joined: {
+                        user.joinDate && !isNaN(Date.parse(user.joinDate))
+                          ? new Date(user.joinDate).toLocaleDateString()
+                          : "N/A"
+                      } • Bookings: {user.totalBookings}
                     </p>
                   </div>
                 </div>
